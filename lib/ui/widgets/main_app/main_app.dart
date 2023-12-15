@@ -9,7 +9,7 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Weather',
-      initialRoute: mainNavigation.initialRoute(false),
+      initialRoute: mainNavigation.initialRoute(true),
       routes: mainNavigation.routes,
       onGenerateRoute: mainNavigation.onGeneratedRoute,
     );
