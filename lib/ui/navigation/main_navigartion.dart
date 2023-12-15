@@ -20,14 +20,14 @@ class MainNavigation {
     MainNavigationRouteNames.locationSettings: (context) =>
         const LocationSettings(),
     MainNavigationRouteNames.chooseLocation: (context) =>
-        const ChooseLocatrion(),
+        const ChooseLocation(),
   };
   Route<Object> onGeneratedRoute(RouteSettings settings) {
     switch (settings.name) {
       case MainNavigationRouteNames.locationPreview:
         final arguments = settings.arguments;
         final location = arguments is String ? arguments : '';
-        return MaterialPageRoute(builder: (context) => LocationPreview());
+        return MaterialPageRoute(builder: (context) => const LocationPreview());
       default:
         const widget = Text('Navigation Error!');
         return MaterialPageRoute(builder: (context) => widget);
