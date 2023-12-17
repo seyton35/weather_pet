@@ -53,10 +53,6 @@ class WeatherApiClient {
       return response;
     }
 
-    // final uri = _makeUri(
-    //     'current.json', <String, dynamic>{'key': _apiKey, 'q': location});
-    // final res = await _client.getUri(uri);
-    // return res;
     final result = _get(
       'current.json',
       parser,
@@ -77,10 +73,6 @@ class WeatherApiClient {
       return response;
     }
 
-    // final uri = _makeUri(
-    //     'current.json', <String, dynamic>{'key': _apiKey, 'q': location});
-    // final res = await _client.getUri(uri);
-    // return res;
     final result = _get(
       'forecast.json',
       parser,
