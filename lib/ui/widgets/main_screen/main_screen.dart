@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:weather_pet/domain/api_clients/weather_api_client.dart';
+import 'package:weather_pet/ui/navigation/main_navigartion.dart';
 
 class MainScreen extends StatelessWidget {
   const MainScreen({super.key});
@@ -6,8 +8,47 @@ class MainScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('city')),
+      appBar: AppBar(
+        title: const _AppBarrTitleWidget(),
+        // leading: _AppBarrLeadingButton(),
+        leading: const _AppBarrLeadingButton(),
+      ),
       body: const _BodyWIdget(),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          final cur = WeatherApiClient().forecastWeather(location: 'moscow');
+        },
+      ),
+    );
+  }
+}
+
+class _AppBarrLeadingButton extends StatelessWidget {
+  const _AppBarrLeadingButton({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      icon: const Icon(Icons.add),
+      onPressed: () => Navigator.of(context)
+          .pushNamed(MainNavigationRouteNames.locationSettings),
+    );
+  }
+}
+
+class _AppBarrTitleWidget extends StatelessWidget {
+  const _AppBarrTitleWidget({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return const Row(
+      children: [
+        Text('city'),
+      ],
     );
   }
 }
@@ -36,7 +77,7 @@ class _BodyWIdget extends StatelessWidget {
       child: ListView(
         children: [
           const _CurrentWeather(),
-          _GetWeeklyWeatherButton(),
+          const _GetWeeklyWeatherButton(),
           _HourlyWeather(),
         ],
       ),
@@ -82,13 +123,14 @@ class _GetWeeklyWeatherButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return OutlinedButton(
-      onPressed: () {},
+      onPressed: () => Navigator.of(context)
+          .pushNamed(MainNavigationRouteNames.weeklyWeather),
       style: ButtonStyle(
         padding: MaterialStateProperty.all(
           const EdgeInsets.symmetric(vertical: 12),
         ),
         backgroundColor: MaterialStateProperty.all(Colors.grey[400]),
-        side: MaterialStatePropertyAll(BorderSide.none),
+        side: const MaterialStatePropertyAll(BorderSide.none),
         shape: MaterialStatePropertyAll(
           RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(999),
