@@ -16,33 +16,28 @@ class _BodyWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
     return Column(
       children: [
-        const SizedBox(height: 24),
-        Padding(
+        const SizedBox(
+          height: 24,
+        ),
+        Container(
           padding: const EdgeInsets.symmetric(horizontal: 10),
+          width: size.width,
           child: Row(
             children: [
-              DecoratedBox(
-                decoration: BoxDecoration(
-                    color: Colors.grey[300],
-                    borderRadius:
-                        const BorderRadius.all(Radius.circular(9999))),
-                child: const Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    SizedBox(
-                      width: 150,
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 10),
-                        child: TextField(
-                            decoration: InputDecoration(
-                          icon: Icon(Icons.search),
-                          border: InputBorder.none,
-                        )),
-                      ),
-                    ),
-                  ],
+              Expanded(
+                child: TextField(
+                  decoration: InputDecoration(
+                    filled: true,
+                    fillColor: Colors.grey[300],
+                    prefixIcon: const Icon(Icons.search),
+                    contentPadding: EdgeInsets.zero,
+                    border: const OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(9999)),
+                        borderSide: BorderSide.none),
+                  ),
                 ),
               ),
               TextButton(
