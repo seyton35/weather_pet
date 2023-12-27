@@ -15,4 +15,16 @@ class Condition {
   factory Condition.fromJson(Map<String, dynamic> json) =>
       _$ConditionFromJson(json);
   Map<String, dynamic> toJson() => _$ConditionToJson(this);
+
+  Condition copyWith({
+    String? text,
+    String? icon,
+    int? code,
+  }) {
+    return Condition(
+      text: text ?? this.text,
+      icon: icon ?? this.icon,
+      code: code ?? this.code,
+    );
+  }
 }

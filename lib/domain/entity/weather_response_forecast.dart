@@ -16,14 +16,14 @@ class Forecast {
 
 @JsonSerializable(fieldRename: FieldRename.snake, explicitToJson: true)
 class Forecastday {
-  final String date;
-  final int dateEpoch;
+  final DateTime date;
+  // final int dateEpoch;
   final Day day;
   final Astro astro;
   final List<Hour> hour;
   Forecastday({
     required this.date,
-    required this.dateEpoch,
+    // required this.dateEpoch,
     required this.day,
     required this.astro,
     required this.hour,
@@ -46,8 +46,8 @@ class Day {
   final double totalprecipMm;
   final double totalprecipIn;
   final double totalsnowCm;
-  final double avgvisKm;
-  final double avgvisMiles;
+  // final double avgvisKm;
+  // final double avgvisMiles;
   final double avghumidity;
   final int dailyWillItRain;
   final int dailyChanceOfRain;
@@ -67,8 +67,8 @@ class Day {
     required this.totalprecipMm,
     required this.totalprecipIn,
     required this.totalsnowCm,
-    required this.avgvisKm,
-    required this.avgvisMiles,
+    // required this.avgvisKm,
+    // required this.avgvisMiles,
     required this.avghumidity,
     required this.dailyWillItRain,
     required this.dailyChanceOfRain,
@@ -107,7 +107,7 @@ class Astro {
 
 @JsonSerializable(fieldRename: FieldRename.snake, explicitToJson: true)
 class Hour {
-  final int timeEpoch;
+  // final int timeEpoch;
   final String time;
   final double tempC;
   final double tempF;
@@ -125,23 +125,23 @@ class Hour {
   final int cloud;
   final double feelslikeC;
   final double feelslikeF;
-  final double windchillC;
-  final double windchillF;
-  final double heatindexC;
-  final double heatindexF;
-  final double dewpointC;
-  final double dewpointF;
+  // final double windchillC;
+  // final double windchillF;
+  // final double heatindexC;
+  // final double heatindexF;
+  // final double dewpointC;
+  // final double dewpointF;
   final int willItRain;
   final int chanceOfRain;
   final int willItSnow;
   final int chanceOfSnow;
-  final double visKm;
-  final double visMiles;
-  final double gustMph;
-  final double gustKph;
+  // final double visKm;
+  // final double visMiles;
+  // final double gustMph;
+  // final double gustKph;
   final double uv;
   Hour({
-    required this.timeEpoch,
+    // required this.timeEpoch,
     required this.time,
     required this.tempC,
     required this.tempF,
@@ -159,20 +159,20 @@ class Hour {
     required this.cloud,
     required this.feelslikeC,
     required this.feelslikeF,
-    required this.windchillC,
-    required this.windchillF,
-    required this.heatindexC,
-    required this.heatindexF,
-    required this.dewpointC,
-    required this.dewpointF,
+    // required this.windchillC,
+    // required this.windchillF,
+    // required this.heatindexC,
+    // required this.heatindexF,
+    // required this.dewpointC,
+    // required this.dewpointF,
     required this.willItRain,
     required this.chanceOfRain,
     required this.willItSnow,
     required this.chanceOfSnow,
-    required this.visKm,
-    required this.visMiles,
-    required this.gustMph,
-    required this.gustKph,
+    // required this.visKm,
+    // required this.visMiles,
+    // required this.gustMph,
+    // required this.gustKph,
     required this.uv,
   });
   factory Hour.fromJson(Map<String, dynamic> json) => _$HourFromJson(json);
