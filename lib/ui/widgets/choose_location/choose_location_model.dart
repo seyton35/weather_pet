@@ -40,17 +40,21 @@ class ChooseLocationViewModelLocation {
 class _ViewModelState {
   String? searchQuery;
   String? errorTitle;
+  String? errorDayWeatherTitle;
   List<_Day> locationDaysList;
-  List<ChooseLocationViewModelLocation> locationsList;
+  List<ChooseLocationViewModelLocation> _locationsList;
+  List<ChooseLocationViewModelLocation> get locationsList =>
+      [..._locationsList];
   List<TrackingLocation> tracklocationsList;
 
   _ViewModelState({
+    this.errorDayWeatherTitle,
     this.errorTitle,
     this.searchQuery = '',
     this.locationDaysList = const [],
-    this.locationsList = const [],
+    List<ChooseLocationViewModelLocation> locationsList = const [],
     this.tracklocationsList = const [],
-  });
+  }) : _locationsList = locationsList;
 }
 
 class ChooseLocationViewModel extends ChangeNotifier {
@@ -65,7 +69,8 @@ class ChooseLocationViewModel extends ChangeNotifier {
     _state.tracklocationsList = _weatherRepository.locationTrackList;
   }
 
-  ChooseLocationViewModel(this._context) {
+  ChooseLocationViewModel({required BuildContext context})
+      : _context = context {
     _loadValue();
   }
 
@@ -83,6 +88,7 @@ class ChooseLocationViewModel extends ChangeNotifier {
     if (parentRoute?.impliesAppBarDismissal ?? false) {
       _navToDaylyWeather(locationTitle: locationResponse.locationTitle);
     } else {
+      // app first start
       _trackLocation(locationResponse);
       _navigateToMainScreen();
     }
@@ -94,6 +100,7 @@ class ChooseLocationViewModel extends ChangeNotifier {
     if (parentRoute?.impliesAppBarDismissal ?? false) {
       _trackLocation(locationResponse);
     } else {
+      // app first start
       _trackLocation(locationResponse);
       _navigateToMainScreen();
     }
@@ -106,20 +113,20 @@ class ChooseLocationViewModel extends ChangeNotifier {
     searchDebounce = Timer(const Duration(milliseconds: 1000), () async {
       text = text.trim();
       final searchQuery = text.isNotEmpty ? text : null;
+      if (searchQuery != null && searchQuery.length < 3) return;
       if (searchQuery == _state.searchQuery) return;
 
       _state.searchQuery = searchQuery;
       _state.locationDaysList = [];
-      _state.locationsList = [];
+      _state._locationsList = [];
       _state.errorTitle = null;
+      _state.errorDayWeatherTitle = null;
       notifyListeners();
       if (searchQuery == null) return;
       try {
-        _state.errorTitle = null;
-        notifyListeners();
         final locationList =
             await _weatherRepository.searchQueryLocations(query: searchQuery);
-        _state.locationsList = _parserLocationList(locationList);
+        _state._locationsList = _parserLocationList(locationList);
         notifyListeners();
       } on ApiClientExeption catch (e) {
         switch (e.type) {
@@ -133,25 +140,27 @@ class ChooseLocationViewModel extends ChangeNotifier {
             break;
         }
       }
-      if (_state.locationsList.isEmpty) return;
+      if (_state._locationsList.isEmpty) return;
       try {
         final forecastDaysList =
             await _weatherRepository.getTargetLocationDaysList(
-                location: _state.tracklocationsList.first.title, days: 5);
+                location: _state._locationsList.first.locationTitle, days: 5);
         final daysList = _parseWeatherDaysList(forecastDaysList);
         _state.locationDaysList = daysList;
         notifyListeners();
       } on ApiClientExeption catch (e) {
         switch (e.type) {
           case ApiClientExeptionType.emptyResponse:
-            _state.errorTitle = 'не удалось загрузить прогноз';
+            _state.errorDayWeatherTitle = 'не удалось загрузить прогноз';
             notifyListeners();
             break;
           default:
+            _state.errorDayWeatherTitle = 'ApiClientExeption';
+            notifyListeners();
             break;
         }
       } catch (e) {
-        _state.errorTitle = 'неизвестная ошибка';
+        _state.errorDayWeatherTitle = 'неизвестная ошибка';
         notifyListeners();
       }
     });
@@ -210,7 +219,31 @@ class ChooseLocationViewModel extends ChangeNotifier {
       id: locationResponse.id,
       title: locationResponse.locationTitle,
     );
-    _weatherRepository.startTrackingLocation(location: location);
+    _state.tracklocationsList =
+        _weatherRepository.startTrackingLocation(location: location);
+    _checkAlreadyTracking();
+  }
+
+  _checkAlreadyTracking() {
+    for (var i = 0; i < _state._locationsList.length; i++) {
+      var location = _state._locationsList[i];
+      var alreadyTracking = false;
+      for (var track in _state.tracklocationsList) {
+        if (track.id == location.id) {
+          alreadyTracking = true;
+          break;
+        }
+      }
+      if (alreadyTracking) {
+        _state._locationsList[i] = ChooseLocationViewModelLocation(
+          id: location.id,
+          locationTitle: location.locationTitle,
+          regionTitle: location.regionTitle,
+          alreadyTracking: alreadyTracking,
+        );
+      }
+    }
+    notifyListeners();
   }
 
   void _navToDaylyWeather({required String locationTitle}) {

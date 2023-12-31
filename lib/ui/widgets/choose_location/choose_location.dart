@@ -8,7 +8,7 @@ class ChooseLocation extends StatelessWidget {
 
   static Widget create() {
     return ChangeNotifierProvider(
-      create: (context) => ChooseLocationViewModel(context),
+      create: (context) => ChooseLocationViewModel(context: context),
       child: const ChooseLocation(),
     );
   }
@@ -104,10 +104,11 @@ class _BodyWidget extends StatelessWidget {
         context.select((ChooseLocationViewModel vm) => vm.state.errorTitle);
     if (errorTitle != null) {
       return Center(
-          child: Text(
-        errorTitle,
-        style: const TextStyle(fontSize: 18),
-      ));
+        child: Text(
+          errorTitle,
+          style: const TextStyle(fontSize: 18),
+        ),
+      );
     }
     return ListView(children: [
       Container(
@@ -130,15 +131,17 @@ class _FirstLocationWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final locationsList =
-        context.select((ChooseLocationViewModel vm) => vm.state.locationsList);
-    if (locationsList.isEmpty) {
+    final isListEmpty = context.select(
+        (ChooseLocationViewModel value) => value.state.locationsList.isEmpty);
+    if (isListEmpty) {
       return const SizedBox.shrink();
     }
+    final location = context.select(
+        (ChooseLocationViewModel value) => value.state.locationsList[0]);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _LocationRowWidget(location: locationsList.first),
+        _LocationListItem(index: 0, item: location),
         const _DaysWeatherListWidget(),
       ],
     );
@@ -147,12 +150,13 @@ class _FirstLocationWidget extends StatelessWidget {
 
 class _DaysWeatherListWidget extends StatelessWidget {
   const _DaysWeatherListWidget();
-
   @override
   Widget build(BuildContext context) {
+    final errorTitle = context
+        .select((ChooseLocationViewModel vm) => vm.state.errorDayWeatherTitle);
+    if (errorTitle != null) return Text(errorTitle);
     final daysList = context
         .select((ChooseLocationViewModel vm) => vm.state.locationDaysList);
-    if (daysList.isEmpty) return const SizedBox.shrink();
     return Column(
       children: [
         Row(
@@ -184,50 +188,58 @@ class _LocationListWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     var locationsList =
         context.select((ChooseLocationViewModel vm) => vm.state.locationsList);
-    if (locationsList.length < 2) {
-      return const SizedBox.shrink();
+    final children = <Widget>[];
+    for (var i = 1; i < locationsList.length; i++) {
+      children.add(_LocationListItem(
+        index: i,
+        item: locationsList[i],
+      ));
     }
-    locationsList = locationsList.sublist(1);
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: locationsList
-          .map((location) => _LocationRowWidget(location: location))
-          .toList(),
+      children: children,
     );
   }
 }
 
-class _LocationRowWidget extends StatelessWidget {
-  final ChooseLocationViewModelLocation location;
-  const _LocationRowWidget({required this.location});
+class _LocationListItem extends StatelessWidget {
+  final int index;
+  final ChooseLocationViewModelLocation item;
+  const _LocationListItem({required this.index, required this.item});
 
   @override
   Widget build(BuildContext context) {
     final model = context.read<ChooseLocationViewModel>();
+
+    final size = MediaQuery.of(context).size;
     return InkWell(
-      onTap: () => model.onLocationWidgetTap(location),
+      onTap: () => model.onLocationWidgetTap(item),
       child: Container(
+        height: 88,
         padding: const EdgeInsets.all(20),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  location.locationTitle,
-                  style: const TextStyle(fontSize: 18),
+                SizedBox(
+                  width: size.width / 10 * 5.5,
+                  child: Text(
+                    item.locationTitle,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 18),
+                  ),
                 ),
                 Text(
-                  location.regionTitle,
+                  item.regionTitle,
                   style: TextStyle(color: Colors.grey[600]),
                 ),
               ],
             ),
-            location.alreadyTracking
+            item.alreadyTracking
                 ? _AddLocationButtonGap()
-                : _AddLocationButton(location: location),
+                : _AddLocationButton(location: item),
           ],
         ),
       ),
@@ -248,6 +260,7 @@ class _AddLocationButton extends StatelessWidget {
     return IconButton(
       onPressed: () => model.onAddLocationButtonTap(location),
       icon: const Icon(Icons.add),
+      padding: EdgeInsets.zero,
     );
   }
 }
