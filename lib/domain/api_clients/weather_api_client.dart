@@ -8,7 +8,7 @@ import 'package:weather_pet/domain/entity/weather_response_current.dart';
 class WeatherApiClient {
   final _client = HttpClient();
   static const _host = 'http://api.weatherapi.com/v1';
-  static const _apiKey = 'e40192c1cd8449dc8b7140101231412';
+  static const _apiKey = '1d4e9b05530c426e910111546232912';
 
   Uri _makeUri(String path, [Map<String, dynamic>? params]) {
     var uri = Uri.parse('$_host/$path');
