@@ -1,15 +1,166 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:weather_pet/ui/widgets/main_screen/main_screen_model.dart';
+import 'package:weather_pet/domain/api_clients/api_clients_exception.dart';
+import 'package:weather_pet/domain/data_providers/track_location_data_provider.dart';
+import 'package:weather_pet/domain/entity/weather_response_current.dart';
+import 'package:weather_pet/domain/entity/weather_response_forecast.dart';
+import 'package:weather_pet/domain/repositories/weather_repository.dart';
+import 'package:weather_pet/library/parsers/weather.dart';
+import 'package:weather_pet/ui/navigation/main_navigartion.dart';
+import 'package:weather_pet/ui/widgets/main_app/main_app.dart';
+
+class _HourWeather {
+  final String tempTitle;
+  final String windSpeedTitle;
+  final String time;
+  final String iconPath;
+
+  _HourWeather({
+    required this.tempTitle,
+    required this.windSpeedTitle,
+    required this.time,
+    required this.iconPath,
+  });
+}
+
+class _Weather {
+  final String iconPath;
+  final String tempTitle;
+  final String minTempTitle;
+  final String maxTempTitle;
+  final List<_HourWeather> hourWeatherList;
+
+  _Weather({
+    required this.iconPath,
+    required this.tempTitle,
+    required this.minTempTitle,
+    required this.maxTempTitle,
+    required this.hourWeatherList,
+  });
+}
+
+class _ViewModel extends ChangeNotifier {
+  final List<TrackingLocation> _trackLocationsList;
+  List<_Weather> locationsWeatherList = [];
+  String screenTitle = '';
+
+  final _date = DateTime.now();
+  final BuildContext _context;
+  final WeatherRepository _weatherRepo;
+
+  _ViewModel({required context, weatherRepository, trackLocationsList})
+      : _context = context,
+        _weatherRepo = weatherRepository ?? WeatherRepository(),
+        _trackLocationsList = trackLocationsList ?? [] {
+    init();
+  }
+
+  void init() async {
+    if (_trackLocationsList.isNotEmpty) {
+      screenTitle = _trackLocationsList[0].title;
+      locationsWeatherList = await _trackLocationsRequest();
+      notifyListeners();
+    }
+  }
+
+  void setScreenTitle({required int index}) {
+    final title = _trackLocationsList[index].title;
+    screenTitle = title;
+    notifyListeners();
+  }
+
+  void onWeeklyWeatherButtonTap() {
+    Navigator.of(_context).pushNamed(MainNavigationRouteNames.weeklyWeather,
+        arguments: screenTitle);
+  }
+
+  void onAppBarLeadingButtonTap() {
+    Navigator.of(_context).pushNamed(MainNavigationRouteNames.chooseLocation);
+  }
+
+  void onSettingsButtonTap() {
+    Navigator.of(_context).pushNamed(MainNavigationRouteNames.settings);
+  }
+
+  Future<List<_Weather>> _trackLocationsRequest() async {
+    final List<_Weather> resList = [];
+    try {
+      for (var track in _trackLocationsList) {
+        final res = await _weatherRepo.getTargetLocationForecast(
+            location: track.title, days: 2);
+        final currentWeather = _parser(res);
+        resList.add(currentWeather);
+      }
+    } on ApiClientExeption catch (e) {
+      switch (e.type) {
+        case ApiClientExeptionType.emptyResponse:
+          break;
+        default:
+      }
+    }
+    return resList;
+  }
+
+  _Weather _parser(WeatherResponceCurrent weather) {
+    List<_HourWeather> hourWeatherList = [];
+    final forecastday = weather.forecast!.forecastday;
+    List<Hour> hourList = [];
+    hourList.addAll(forecastday[0].hour + forecastday[1].hour);
+    bool firstLoop = true;
+    for (var i = _date.hour; i <= _date.hour + 24; i++) {
+      final hour = hourList[i];
+      final tempTitle = hour.tempC.round().toString();
+      final windSpeedTitle = hour.windKph.toString();
+      String time = hour.time.substring(11);
+      if (firstLoop) {
+        firstLoop = false;
+        time = 'Сейчас';
+      }
+
+      final iconPath = hour.condition.icon
+          .replaceFirst('//cdn.weatherapi.com/', 'lib/domain/resources/');
+      hourWeatherList.add(
+        _HourWeather(
+            tempTitle: tempTitle,
+            windSpeedTitle: windSpeedTitle,
+            time: time,
+            iconPath: iconPath),
+      );
+    }
+    final current = weather.current!;
+    final iconPath = current.condition.icon
+        .replaceFirst('//cdn.weatherapi.com/', 'lib/domain/resources/');
+    final tempTitle = current.tempC.round().toString();
+    final map = WeatherParser()
+        .getMinMaxDayTemperatureInt(hourList: forecastday[0].hour);
+    final minTempTitle = map['min_temp'].toString();
+    final maxTempTitle = map['max_temp'].toString();
+
+    final currentWeather = _Weather(
+        iconPath: iconPath,
+        tempTitle: tempTitle,
+        minTempTitle: minTempTitle,
+        maxTempTitle: maxTempTitle,
+        hourWeatherList: hourWeatherList);
+
+    return currentWeather;
+  }
+}
 
 class MainScreen extends StatelessWidget {
   const MainScreen({super.key});
 
   static Widget create() {
-    return ChangeNotifierProvider(
-      create: (context) => MainScreenViewModel(context),
-      lazy: false,
+    return ChangeNotifierProxyProvider<MainAppModel, _ViewModel>(
+      create: (context) => _ViewModel(
+        context: context,
+      ),
+      update: (context, mainApp, mainScreen) => _ViewModel(
+        context: context,
+        weatherRepository: mainApp.weatherRepository,
+        trackLocationsList: mainApp.trackList,
+      ),
       child: const MainScreen(),
     );
   }
@@ -20,11 +171,11 @@ class MainScreen extends StatelessWidget {
       appBar: AppBar(
         title: const _AppBarrTitleWidget(),
         leading: const _AppBarLeadingButton(),
+        actions: const [_AppBarSettingsButton()],
         backgroundColor: Colors.transparent,
-        // shadowColor: Colors.transparent,
         centerTitle: true,
       ),
-      body: const _BodyWIdget(),
+      body: const _BodyWidget(),
     );
   }
 }
@@ -34,10 +185,23 @@ class _AppBarLeadingButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final model = context.read<MainScreenViewModel>();
+    final model = context.read<_ViewModel>();
     return IconButton(
       icon: const Icon(Icons.add),
-      onPressed: () => model.onAppBarLeadingButtonTap(),
+      onPressed: model.onAppBarLeadingButtonTap,
+    );
+  }
+}
+
+class _AppBarSettingsButton extends StatelessWidget {
+  const _AppBarSettingsButton();
+
+  @override
+  Widget build(BuildContext context) {
+    final model = context.read<_ViewModel>();
+    return IconButton(
+      onPressed: model.onSettingsButtonTap,
+      icon: const Icon(Icons.settings),
     );
   }
 }
@@ -47,23 +211,26 @@ class _AppBarrTitleWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final locationTitle =
-        context.select((MainScreenViewModel vm) => vm.state.screenTitle);
+    final locationTitle = context.select((_ViewModel vm) => vm.screenTitle);
     return Text(locationTitle);
   }
 }
 
-class _BodyWIdget extends StatelessWidget {
-  const _BodyWIdget();
+class _BodyWidget extends StatelessWidget {
+  const _BodyWidget();
 
   @override
   Widget build(BuildContext context) {
-    final model = context.watch<MainScreenViewModel>();
-    final weatherList = model.state.locationsWeatherList;
+    final model = context.read<_ViewModel>();
+    final weatherList =
+        context.select((_ViewModel value) => value.locationsWeatherList);
     final size = MediaQuery.of(context).size;
     final items = weatherList
-        .map((weather) => _ScreenWidget(
-              weather: weather,
+        .asMap()
+        .entries
+        .map((e) => _ScreenWidget(
+              weather: e.value,
+              index: e.key,
             ))
         .toList();
     return Padding(
@@ -83,18 +250,20 @@ class _BodyWIdget extends StatelessWidget {
 }
 
 class _ScreenWidget extends StatelessWidget {
-  final MainScreenWeather weather;
+  final int index;
+  final _Weather weather;
   const _ScreenWidget({
     required this.weather,
+    required this.index,
   });
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 18),
       child: ListView(
         children: [
-          _CurrentWeather(weather: weather),
+          _CurrentWeather(index: index, weather: weather),
           const _GetWeeklyWeatherButton(),
           _HourlyWeather(hourWeatherList: weather.hourWeatherList),
         ],
@@ -104,9 +273,11 @@ class _ScreenWidget extends StatelessWidget {
 }
 
 class _CurrentWeather extends StatelessWidget {
-  final MainScreenWeather weather;
+  final _Weather weather;
+  final int index;
   const _CurrentWeather({
     required this.weather,
+    required this.index,
   });
 
   @override
@@ -138,7 +309,7 @@ class _GetWeeklyWeatherButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final model = context.read<MainScreenViewModel>();
+    final model = context.read<_ViewModel>();
     return OutlinedButton(
       onPressed: () => model.onWeeklyWeatherButtonTap(),
       style: ButtonStyle(
@@ -164,7 +335,7 @@ class _GetWeeklyWeatherButton extends StatelessWidget {
 }
 
 class _HourlyWeather extends StatelessWidget {
-  final List<MainScreenHourWeather> hourWeatherList;
+  final List<_HourWeather> hourWeatherList;
   const _HourlyWeather({
     required this.hourWeatherList,
   });
@@ -205,7 +376,7 @@ class _HourlyWeather extends StatelessWidget {
 }
 
 class _HourWeatherWidget extends StatelessWidget {
-  final MainScreenHourWeather hourWeather;
+  final _HourWeather hourWeather;
   const _HourWeatherWidget({required this.hourWeather});
 
   @override

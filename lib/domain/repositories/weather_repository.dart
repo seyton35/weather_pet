@@ -17,7 +17,7 @@ class WeatherRepository {
   List<LocationResponse> get locationsList => _locationsList;
 
   Future<void> init() async {
-    trackLocationDataProvider.loadTrackList();
+    await trackLocationDataProvider.loadTrackList();
   }
 
   Future<List<Forecastday>> getTargetLocationDaysList(
@@ -58,12 +58,22 @@ class WeatherRepository {
     }
   }
 
-  void startTrackingLocation({required TrackingLocation location}) {
+  List<TrackingLocation> startTrackingLocation(
+      {required TrackingLocation location}) {
     trackLocationDataProvider.addLocation(location);
+    return trackLocationDataProvider.locationTrackList;
   }
 
   Future<bool> hasStoredLocations() async {
     final trackList = await trackLocationDataProvider.loadTrackList();
     return trackList.isNotEmpty;
+  }
+
+  bool deleteTrackingLocations(List<TrackingLocation> locationsList) {
+    locationsList
+        .map(
+            (location) => trackLocationDataProvider.deleteLocation(location.id))
+        .toList();
+    return true;
   }
 }
