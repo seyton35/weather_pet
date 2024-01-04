@@ -1,5 +1,6 @@
 import 'package:weather_pet/domain/api_clients/api_clients_exception.dart';
 import 'package:weather_pet/domain/api_clients/weather_api_client.dart';
+import 'package:weather_pet/domain/data_providers/store_weather_data_provider.dart';
 import 'package:weather_pet/domain/data_providers/track_location_data_provider.dart';
 import 'package:weather_pet/domain/entity/location_response.dart';
 import 'package:weather_pet/domain/entity/weather_response_current.dart';
@@ -8,9 +9,12 @@ import 'package:weather_pet/domain/entity/weather_response_forecast.dart';
 class WeatherRepository {
   final weatherApiClient = WeatherApiClient();
   final trackLocationDataProvider = TrackLocationDataProvider();
+  final storedLocationWeatherDataProvider = StoredLocationWeatherDataProvider();
 
   List<TrackingLocation> get locationTrackList =>
       trackLocationDataProvider.locationTrackList;
+  List<StoredLocationWeather> get locationWeatherList =>
+      storedLocationWeatherDataProvider.locationWeatherList;
   var _weather = WeatherResponceCurrent();
   WeatherResponceCurrent get weather => _weather;
   List<LocationResponse> _locationsList = [];
@@ -18,6 +22,7 @@ class WeatherRepository {
 
   Future<void> init() async {
     await trackLocationDataProvider.loadTrackList();
+    await storedLocationWeatherDataProvider.loadLocationWeatherList();
   }
 
   Future<List<Forecastday>> getTargetLocationDaysList(
@@ -58,10 +63,18 @@ class WeatherRepository {
     }
   }
 
-  List<TrackingLocation> startTrackingLocation(
-      {required TrackingLocation location}) {
+  List<TrackingLocation> startTrackingLocation({
+    required TrackingLocation location,
+  }) {
     trackLocationDataProvider.addLocation(location);
-    return trackLocationDataProvider.locationTrackList;
+    return locationTrackList;
+  }
+
+  List<StoredLocationWeather> storeLocationWeather({
+    required StoredLocationWeather locationWeather,
+  }) {
+    storedLocationWeatherDataProvider.addWeather(locationWeather);
+    return locationWeatherList;
   }
 
   Future<bool> hasStoredLocations() async {

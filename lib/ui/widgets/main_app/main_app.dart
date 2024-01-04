@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:weather_pet/domain/api_clients/api_clients_exception.dart';
+import 'package:weather_pet/domain/data_providers/store_weather_data_provider.dart';
 import 'package:weather_pet/domain/data_providers/track_location_data_provider.dart';
 import 'package:weather_pet/domain/repositories/weather_repository.dart';
 import 'package:weather_pet/ui/navigation/main_navigartion.dart';
@@ -7,6 +9,7 @@ import 'package:weather_pet/ui/navigation/main_navigartion.dart';
 class MainAppModel extends ChangeNotifier {
   final weatherRepository = WeatherRepository();
   List<TrackingLocation>? trackList;
+  List<StoredLocationWeather>? locationWeatherList;
 
   MainAppModel() {
     init();
@@ -15,12 +18,42 @@ class MainAppModel extends ChangeNotifier {
   Future<void> init() async {
     await weatherRepository.init();
     trackList = weatherRepository.locationTrackList;
+    locationWeatherList = weatherRepository.locationWeatherList;
+    notifyListeners();
+    if (trackList?.isNotEmpty == true) {
+      _trackLocationsRequest();
+    }
+  }
+
+  void trackLocation(TrackingLocation location) async {
+    weatherRepository.startTrackingLocation(location: location);
+    final response = await weatherRepository.getTargetLocationForecast(
+        location: location.title, days: 7);
+    final locationWeather = StoredLocationWeather(
+      id: location.id,
+      weather: response,
+    );
+    locationWeatherList?.add(locationWeather);
     notifyListeners();
   }
 
-  void trackLocation(TrackingLocation location) {
-    weatherRepository.startTrackingLocation(location: location);
-    notifyListeners();
+  Future<void> _trackLocationsRequest() async {
+    try {
+      for (var track in trackList!) {
+        final response = await weatherRepository.getTargetLocationForecast(
+            location: track.title, days: 7);
+        final locationWeather =
+            StoredLocationWeather(id: track.id, weather: response);
+        locationWeatherList?.add(locationWeather);
+      }
+      notifyListeners();
+    } on ApiClientExeption catch (e) {
+      switch (e.type) {
+        case ApiClientExeptionType.emptyResponse:
+          break;
+        default:
+      }
+    }
   }
 }
 

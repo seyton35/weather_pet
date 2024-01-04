@@ -43,7 +43,8 @@ class _Weather {
 class _ViewModel extends ChangeNotifier {
   final List<TrackingLocation> _trackLocationsList;
   List<_Weather> locationsWeatherList = [];
-  String screenTitle = '';
+  String locationTitle = '';
+  String? locationId;
 
   final _date = DateTime.now();
   final BuildContext _context;
@@ -58,21 +59,28 @@ class _ViewModel extends ChangeNotifier {
 
   void init() async {
     if (_trackLocationsList.isNotEmpty) {
-      screenTitle = _trackLocationsList[0].title;
-      locationsWeatherList = await _trackLocationsRequest();
-      notifyListeners();
+      if (_weatherRepo.locationWeatherList.isNotEmpty) {
+        locationTitle = _trackLocationsList[0].title;
+        locationId = _trackLocationsList[0].id;
+        locationsWeatherList = _trackLocationsParse();
+        notifyListeners();
+      }
     }
   }
 
   void setScreenTitle({required int index}) {
-    final title = _trackLocationsList[index].title;
-    screenTitle = title;
+    locationTitle = _trackLocationsList[index].title;
+    locationId = _trackLocationsList[index].id;
     notifyListeners();
   }
 
   void onWeeklyWeatherButtonTap() {
-    Navigator.of(_context).pushNamed(MainNavigationRouteNames.weeklyWeather,
-        arguments: screenTitle);
+    Navigator.of(_context)
+        .pushNamed(MainNavigationRouteNames.weeklyWeather, arguments: {
+      'location_title': locationTitle,
+      'location_id': locationId,
+      'already_tracking': true,
+    });
   }
 
   void onAppBarLeadingButtonTap() {
@@ -83,23 +91,19 @@ class _ViewModel extends ChangeNotifier {
     Navigator.of(_context).pushNamed(MainNavigationRouteNames.settings);
   }
 
-  Future<List<_Weather>> _trackLocationsRequest() async {
-    final List<_Weather> resList = [];
-    try {
-      for (var track in _trackLocationsList) {
-        final res = await _weatherRepo.getTargetLocationForecast(
-            location: track.title, days: 2);
-        final currentWeather = _parser(res);
-        resList.add(currentWeather);
-      }
-    } on ApiClientExeption catch (e) {
-      switch (e.type) {
-        case ApiClientExeptionType.emptyResponse:
-          break;
-        default:
+  List<_Weather> _trackLocationsParse() {
+    final List<_Weather> weatherList = [];
+    for (var track in _trackLocationsList) {
+      final locationWeatherList = _weatherRepo.locationWeatherList;
+      for (var locationWeather in locationWeatherList) {
+        if (track.id == locationWeather.id) {
+          final currentWeather = _parser(locationWeather.weather);
+          weatherList.add(currentWeather);
+          continue;
+        }
       }
     }
-    return resList;
+    return weatherList;
   }
 
   _Weather _parser(WeatherResponceCurrent weather) {
@@ -211,7 +215,7 @@ class _AppBarrTitleWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final locationTitle = context.select((_ViewModel vm) => vm.screenTitle);
+    final locationTitle = context.select((_ViewModel vm) => vm.locationTitle);
     return Text(locationTitle);
   }
 }

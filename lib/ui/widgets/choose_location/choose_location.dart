@@ -60,7 +60,7 @@ class _ViewModelState {
 class _ViewModel extends ChangeNotifier {
   List<TrackingLocation>? _trackLocationsList;
 
-  final WeatherRepository _weatherRepo;
+  WeatherRepository _weatherRepo;
   var _state = _ViewModelState();
   _ViewModelState get state => _state;
   final BuildContext _context;
@@ -78,16 +78,16 @@ class _ViewModel extends ChangeNotifier {
     }
   }
 
-  _ViewModel copyWith({
-    required BuildContext context,
-    WeatherRepository? weatherRepository,
-  }) {
-    return _ViewModel(
-      context: context,
-      weatherRepository: weatherRepository,
-      state: _state,
-    );
-  }
+  // _ViewModel copyWith({
+  //   required BuildContext context,
+  //   WeatherRepository? weatherRepository,
+  // }) {
+  //   return _ViewModel(
+  //     context: context,
+  //     weatherRepository: weatherRepository,
+  //     state: _state,
+  //   );
+  // }
 
   void onCancelButtonTap() {
     final parentRoute = ModalRoute.of(_context);
@@ -101,7 +101,11 @@ class _ViewModel extends ChangeNotifier {
   void onLocationWidgetTap(_Location locationResponse) {
     final parentRoute = ModalRoute.of(_context);
     if (parentRoute?.impliesAppBarDismissal ?? false) {
-      _navToDaylyWeather(locationTitle: locationResponse.locationTitle);
+      _navToDaylyWeather(
+        locationTitle: locationResponse.locationTitle,
+        locationId: locationResponse.id,
+        alreadyTracking: locationResponse.alreadyTracking,
+      );
     } else {
       // app first start
       _trackLocation(locationResponse);
@@ -261,10 +265,18 @@ class _ViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void _navToDaylyWeather({required String locationTitle}) {
+  void _navToDaylyWeather({
+    required String locationTitle,
+    required String locationId,
+    required bool alreadyTracking,
+  }) {
     Navigator.of(_context).pushNamed(
       MainNavigationRouteNames.weeklyWeather,
-      arguments: locationTitle,
+      arguments: {
+        'location_title': locationTitle,
+        'location_id': locationId,
+        'already_tracking': alreadyTracking,
+      },
     );
   }
 
@@ -280,11 +292,9 @@ class ChooseLocation extends StatelessWidget {
   static Widget create() {
     return ChangeNotifierProxyProvider<MainAppModel, _ViewModel>(
       create: (context) => _ViewModel(context: context),
-      update: (context, mainApp, chooseLocationModel) =>
-          chooseLocationModel!.copyWith(
-        context: context,
-        weatherRepository: mainApp.weatherRepository,
-      ),
+      update: (context, mainApp, chooseLocationModel) => chooseLocationModel!
+        .._weatherRepo = mainApp.weatherRepository
+        .._trackLocationsList = mainApp.trackList,
       child: const ChooseLocation(),
     );
   }
