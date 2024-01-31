@@ -4,8 +4,9 @@ import 'package:local_storage_tracking_locations_api/local_storage_tracking_loca
 import 'package:rxdart/subjects.dart';
 
 class TrackLocationDataProvider {
-  TrackLocationDataProvider({required SharedPreferences plugin})
-      : _plugin = plugin {
+  TrackLocationDataProvider({
+    required SharedPreferences plugin,
+  }) : _plugin = plugin {
     _init();
   }
 
@@ -21,33 +22,36 @@ class TrackLocationDataProvider {
   final _trackingLocationStreamController =
       BehaviorSubject<List<TrackingLocation>>.seeded(const []);
 
+  Stream<List<TrackingLocation>> getLocations() =>
+      _trackingLocationStreamController.asBroadcastStream();
+
   void _init() {
     final trackLocationsJson = _getValue(kTrackingLocationsCollectionKey);
     if (trackLocationsJson != null) {
-      final trackLocations = List<Map<dynamic, dynamic>>.from(
-        json.decode(trackLocationsJson) as List,
-      )
-          .map((jsonMap) =>
-              TrackingLocation.fromJson(Map<String, dynamic>.from(jsonMap)))
+      final trackLocationsListJson = json.decode(trackLocationsJson) as List;
+      final trackLocations = trackLocationsListJson
+          .map(
+            (locationJson) => TrackingLocation.fromJson(
+              jsonDecode(locationJson),
+            ),
+          )
           .toList();
-      _trackingLocationStreamController.add(trackLocations);
+      _trackingLocationStreamController.add([...trackLocations]);
     } else {
       _trackingLocationStreamController.add(const []);
     }
   }
 
-  Stream<List<TrackingLocation>> getTodos() =>
-      _trackingLocationStreamController.asBroadcastStream();
-
   Future<void> saveLocation(TrackingLocation location) {
     final locations = [..._trackingLocationStreamController.value];
     final isLocationIndex = locations.indexWhere((l) => l.id == location.id);
-    if (isLocationIndex != -1) {
+    if (isLocationIndex == -1) {
       locations.add(location);
+      _trackingLocationStreamController.add(locations);
+      return _setValue(kTrackingLocationsCollectionKey, json.encode(locations));
+    } else {
+      throw Exception();
     }
-
-    _trackingLocationStreamController.add(locations);
-    return _setValue(kTrackingLocationsCollectionKey, json.encode(locations));
   }
 
   Future<void> deleteLocation(String id) async {
