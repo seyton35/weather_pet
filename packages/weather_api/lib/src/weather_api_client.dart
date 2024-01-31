@@ -75,8 +75,8 @@ class WeatherApiClient {
   }) async {
     parser(dynamic json) {
       final jsonMap = json as Map<String, dynamic>;
-      final response = CurrentWeather.fromJson(jsonMap);
-      return response;
+      final currentWeather = CurrentWeather.fromJson(jsonMap);
+      return currentWeather;
     }
 
     final result = _get(
