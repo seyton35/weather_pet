@@ -29,27 +29,46 @@ class WeatherOverviewBloc
     WeatherOverviewEventSubscription event,
     Emitter<WeatherOverviewState> emit,
   ) async {
-    await _weatherRepository.getCurrentWeatherList();
-    final trackLocationsList = await _weatherRepository.trackingLocations.first;
-    final locationTitle = trackLocationsList[0].title;
-    emit(state.copyWith(
-      status: () => WeatherOverviewStatus.loading,
-      locationTitle: () => locationTitle,
-    ));
-    await emit.forEach<List<CurrentWeatherData>>(
-      _weatherRepository.currentWeatherList,
-      onData: (data) => state.copyWith(
-        status: () => WeatherOverviewStatus.success,
-        weatherList: () => _listWeatherParser(data),
-      ),
-    );
+    try {
+      await _weatherRepository.getCurrentWeatherList();
+      final trackLocationsList =
+          await _weatherRepository.trackingLocations.first;
+      final locationTitle = trackLocationsList[0].title;
+      emit(state.copyWith(
+        status: () => WeatherOverviewStatus.loading,
+        locationTitle: () => locationTitle,
+      ));
+      await emit.forEach<List<CurrentWeatherData>>(
+        _weatherRepository.currentWeatherList,
+        onData: (data) => state.copyWith(
+          status: () => WeatherOverviewStatus.success,
+          weatherList: () => _listWeatherParser(data),
+        ),
+      );
+    } on ApiClientExeption catch (e) {
+      switch (e.type) {
+        case ApiClientExeptionType.network:
+          emit(state.copyWith(
+            status: () => WeatherOverviewStatus.error,
+            errorTitle: () => 'Проверьте интернет-соеденение',
+          ));
+          break;
+        default:
+          throw Error();
+      }
+    } catch (e) {
+      emit(state.copyWith(
+        status: () => WeatherOverviewStatus.error,
+        errorTitle: () => 'неизвестная ошибка',
+      ));
+    }
   }
 
   Future<void> _onTitleChange(
     WeatherOverviewEventTitleChange event,
     Emitter<WeatherOverviewState> emit,
   ) async {
-    final location = await _weatherRepository.trackingLocations.elementAt(0);
+    final location = await _weatherRepository.trackingLocations.first;
     final locationTitle = location[event.index].title;
     emit(state.copyWith(
       locationTitle: () => locationTitle,
