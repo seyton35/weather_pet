@@ -143,6 +143,11 @@ class ChooseLocationBloc
       _navigateToMainScreen();
     } else {
       final locationsList = await _trackLocation(event.location);
+      final trackingLocationsList =
+          await _weatherRepository.trackingLocations.first;
+      final trackingLocation = trackingLocationsList
+          .firstWhere((element) => element.id == event.location.id);
+      _weatherRepository.getAndStoreCurrentWeather(location: trackingLocation);
       emit(state.copyWith(
         status: () => ChooseLocationBlocStatus.success,
         locationsList: () => locationsList,

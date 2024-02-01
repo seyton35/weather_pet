@@ -32,12 +32,14 @@ class WeatherOverviewBloc
     await _weatherRepository.getCurrentWeatherList();
     final trackLocationsList = await _weatherRepository.trackingLocations.first;
     final locationTitle = trackLocationsList[0].title;
-    emit(state.copyWith(status: () => WeatherOverviewStatus.loading));
+    emit(state.copyWith(
+      status: () => WeatherOverviewStatus.loading,
+      locationTitle: () => locationTitle,
+    ));
     await emit.forEach<List<CurrentWeatherData>>(
       _weatherRepository.currentWeatherList,
       onData: (data) => state.copyWith(
         status: () => WeatherOverviewStatus.success,
-        locationTitle: () => locationTitle,
         weatherList: () => _listWeatherParser(data),
       ),
     );

@@ -51,6 +51,22 @@ class WeatherRepository {
     return weather;
   }
 
+  Future<void> getAndStoreCurrentWeather(
+      {required TrackingLocation location}) async {
+    final res = await getCurrentWeather(
+        location: "${location.lat},${location.lon}", days: 7);
+    final currentWeatherList = await _currentWeatherStreamController.first;
+
+    final currentWeatherData = CurrentWeatherData(
+      id: location.id,
+      location: res.location,
+      current: res.current,
+      forecast: res.forecast,
+    );
+    currentWeatherList.add(currentWeatherData);
+    _currentWeatherStreamController.add(currentWeatherList);
+  }
+
   Future<List<Forecastday>> getWeatherByDays(
       {required String location, required int days}) async {
     final weather = await getCurrentWeather(

@@ -221,12 +221,14 @@ class _LocationListWidget extends StatelessWidget {
 class _LocationListItem extends StatelessWidget {
   final int index;
   final Location item;
-  const _LocationListItem({required this.index, required this.item});
+  const _LocationListItem({
+    required this.index,
+    required this.item,
+  });
 
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    final parentRoute = ModalRoute.of(context);
 
     return InkWell(
       onTap: () => context
