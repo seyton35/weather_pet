@@ -60,11 +60,13 @@ class WeeklyWeatherBloc extends Bloc<WeeklyWeatherEvent, WeeklyWeatherState> {
           default:
             throw Error();
         }
+        return;
       } catch (e) {
         emit(state.copyWith(
           status: () => WeeklyWeatherStatus.error,
           errorTitle: () => 'Неизвестная ошибка',
         ));
+        return;
       }
     }
     emit(state.copyWith(

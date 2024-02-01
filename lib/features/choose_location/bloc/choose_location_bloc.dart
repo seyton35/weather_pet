@@ -66,15 +66,17 @@ class ChooseLocationBloc
         case ApiClientExeptionType.emptyResponse:
           emit(state.copyWith(
             status: () => ChooseLocationBlocStatus.error,
-            errorTitle: () => 'по вашему запросу ничего не найдено',
+            errorTitle: () => 'По вашему запросу ничего не найдено',
+          ));
+          break;
+        case ApiClientExeptionType.network:
+          emit(state.copyWith(
+            status: () => ChooseLocationBlocStatus.error,
+            errorTitle: () => 'Проверьте интернет-соединение',
           ));
           break;
         default:
-          emit(state.copyWith(
-            status: () => ChooseLocationBlocStatus.error,
-            errorTitle: () => 'неизвестная ошибка',
-          ));
-          break;
+          throw Error();
       }
     } catch (e) {
       emit(state.copyWith(
