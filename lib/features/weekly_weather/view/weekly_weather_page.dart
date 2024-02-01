@@ -28,7 +28,22 @@ class WeeklyWeatherPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const _AppBarTitle()),
-      body: _DaylyWeather(),
+      body: BlocBuilder<WeeklyWeatherBloc, WeeklyWeatherState>(
+        buildWhen: (previous, current) => previous.status != current.status,
+        builder: (context, state) {
+          switch (state.status) {
+            case WeeklyWeatherStatus.initial:
+              return const SizedBox.shrink();
+            case WeeklyWeatherStatus.loading:
+              return const Center(child: CircularProgressIndicator());
+            case WeeklyWeatherStatus.success:
+              return _DaylyWeather();
+            case WeeklyWeatherStatus.error:
+            default:
+              return Center(child: Text(state.errorTitle));
+          }
+        },
+      ),
     );
   }
 }

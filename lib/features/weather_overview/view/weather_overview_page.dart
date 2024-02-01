@@ -27,7 +27,22 @@ class WeatherOverview extends StatelessWidget {
         backgroundColor: Colors.transparent,
         centerTitle: true,
       ),
-      body: const _BodyWidget(),
+      body: BlocBuilder<WeatherOverviewBloc, WeatherOverviewState>(
+        buildWhen: (previous, current) => previous.status != current.status,
+        builder: (context, state) {
+          switch (state.status) {
+            case WeatherOverviewStatus.initial:
+              return const SizedBox.shrink();
+            case WeatherOverviewStatus.loading:
+              return const Center(child: CircularProgressIndicator());
+            case WeatherOverviewStatus.success:
+              return const _BodyWidget();
+            case WeatherOverviewStatus.error:
+            default:
+              return Center(child: Text(state.errorTitle));
+          }
+        },
+      ),
     );
   }
 }
