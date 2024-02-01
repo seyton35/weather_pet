@@ -48,7 +48,7 @@ class MainNavigation {
       case MainNavigationRouteNames.chooseLocation:
         return MaterialPageRoute(
           builder: (context) => ChooseLocation.create(
-            isRootRoute: settings.arguments as bool,
+            isRootRoute: settings.arguments as bool? ?? true,
           ),
         );
       default:
