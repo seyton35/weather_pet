@@ -66,10 +66,10 @@ class _AppBarSettingsButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // final model = context.read<_ViewModel>();
     return IconButton(
-      onPressed: () {},
-      // onPressed: model.onSettingsButtonTap,
+      onPressed: () => context
+          .read<WeatherOverviewBloc>()
+          .add(const WeatherOverviewEventSettingsButtonTap()),
       icon: const Icon(Icons.settings),
     );
   }

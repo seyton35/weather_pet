@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import 'package:weather_pet/features/choose_location/choose_location.dart';
+import 'package:weather_pet/features/locations_settings/view/view.dart';
+import 'package:weather_pet/features/settings/settings.dart';
 import 'package:weather_pet/features/weather_overview/weather_overview.dart';
 import 'package:weather_pet/features/weekly_weather/weekly_weather.dart';
 
@@ -8,9 +10,9 @@ abstract class MainNavigationRouteNames {
   // static const loader = '/loader';
   static const weatherOverview = '/weather_overview';
   static const weeklyWeather = '/weekly_weather';
-  // static const locationSettings = '/location_settings';
+  static const locationSettings = '/location_settings';
   static const chooseLocation = '/choose_location';
-  // static const settings = '/settings';
+  static const settings = '/settings';
 }
 
 class MainNavigation {
@@ -23,9 +25,9 @@ class MainNavigation {
         WeatherOverview.create(),
     // MainNavigationRouteNames.chooseLocation: (context) =>
     //     ChooseLocation.create()
-    // MainNavigationRouteNames.locationSettings: (context) =>
-    //     const LocationSettings(),
-    // MainNavigationRouteNames.settings: (context) => const Settings()
+    MainNavigationRouteNames.locationSettings: (context) =>
+        LocationSettingsPage.create(),
+    MainNavigationRouteNames.settings: (context) => SettingsPage.create(),
   };
   Route<Object> onGeneratedRoute(RouteSettings settings) {
     switch (settings.name) {

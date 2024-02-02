@@ -21,8 +21,9 @@ class WeatherOverviewBloc
         super(const WeatherOverviewState()) {
     on<WeatherOverviewEventSubscription>(_onSubscriptionRequest);
     on<WeatherOverviewEventTitleChange>(_onTitleChange);
-    on<WeatherOverviewEventAddLocationButtonTap>(_onAddLocationTap);
+    on<WeatherOverviewEventAddLocationButtonTap>(_onAddLocationButtonTap);
     on<WeatherOverviewEventWeeklyWeatherButtonTap>(_onWeeklyWeatherTap);
+    on<WeatherOverviewEventSettingsButtonTap>(_onSettingsButtonTap);
   }
 
   Future<void> _onSubscriptionRequest(
@@ -75,13 +76,12 @@ class WeatherOverviewBloc
     ));
   }
 
-  void _onAddLocationTap(
+  void _onAddLocationButtonTap(
     WeatherOverviewEventAddLocationButtonTap event,
     Emitter<WeatherOverviewState> emit,
   ) {
     Navigator.of(_context).pushNamed(
-      MainNavigationRouteNames.chooseLocation,
-      arguments: false,
+      MainNavigationRouteNames.locationSettings,
     );
   }
 
@@ -94,6 +94,13 @@ class WeatherOverviewBloc
           "location_id": event.locationId,
           "location_title": event.locationTitle,
         });
+  }
+
+  void _onSettingsButtonTap(
+    WeatherOverviewEventSettingsButtonTap event,
+    Emitter<WeatherOverviewState> emit,
+  ) {
+    Navigator.of(_context).pushNamed(MainNavigationRouteNames.settings);
   }
 
   List<Weather> _listWeatherParser(List<CurrentWeatherData> rawList) {
