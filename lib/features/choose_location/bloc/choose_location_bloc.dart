@@ -42,9 +42,8 @@ class ChooseLocationBloc
     Emitter<ChooseLocationState> emit,
   ) async {
     final text = event.textQuery.trim();
-    final searchQuery = text.isNotEmpty ? text : null;
-    if (searchQuery != null && searchQuery.length < 3) return;
-    if (searchQuery == state.searchQuery) return;
+    if (text.length < 3) return;
+    if (text == state.searchQuery) return;
 
     emit(state.copyWith(
       status: () => ChooseLocationBlocStatus.loading,

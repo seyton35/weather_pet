@@ -13,6 +13,7 @@ class WeatherOverviewBloc
     extends Bloc<WeatherOverviewEvent, WeatherOverviewState> {
   final WeatherRepository _weatherRepository;
   final BuildContext _context;
+  int carouselIndex = 0;
   WeatherOverviewBloc(
       {required WeatherRepository weatherRepository,
       required BuildContext context})
@@ -41,10 +42,13 @@ class WeatherOverviewBloc
       ));
       await emit.forEach<List<CurrentWeatherData>>(
         _weatherRepository.currentWeatherList,
-        onData: (data) => state.copyWith(
-          status: () => WeatherOverviewStatus.success,
-          weatherList: () => _listWeatherParser(data),
-        ),
+        onData: (data) {
+          return state.copyWith(
+            status: () => WeatherOverviewStatus.success,
+            weatherList: () => _listWeatherParser(data),
+            locationTitle: () => data[carouselIndex].location.name,
+          );
+        },
       );
     } on ApiClientExeption catch (e) {
       switch (e.type) {
@@ -69,6 +73,7 @@ class WeatherOverviewBloc
     WeatherOverviewEventTitleChange event,
     Emitter<WeatherOverviewState> emit,
   ) async {
+    carouselIndex = event.index;
     final location = await _weatherRepository.trackingLocations.first;
     final locationTitle = location[event.index].title;
     emit(state.copyWith(
