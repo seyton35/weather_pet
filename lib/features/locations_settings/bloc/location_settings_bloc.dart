@@ -3,6 +3,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:local_storage_tracking_locations_api/local_storage_tracking_locations_api.dart';
 import 'package:weather_pet/domain/navigation/main_navigartion.dart';
+import 'package:weather_pet/domain/parsers/weather.dart';
 import 'package:weather_repository/weather_repository.dart' hide Location;
 import 'package:weather_pet/features/locations_settings/location_settings.dart';
 
@@ -21,9 +22,11 @@ class LocationSettingsBloc
         super(const LocationSettingsState()) {
     on<LocationSettingsEventSubscription>(_onSubscription);
     on<LocationSettingsEventSearchButtonTap>(_onSearchButtonTap);
-    on<LocationSettingsEventEditingButtonTap>(_onEditingButtonTap);
+    on<LocationSettingsEventEditing>(_onEditing);
     on<LocationSettingsEventDragging>(_onDragging);
     on<LocationSettingsEventToggleCheck>(_onToggleCheck);
+    on<LocationSettingsEventDeleteButtonTap>(_onDeleteButtonTap);
+    on<LocationSettingsEventCheckAll>(_onCheckAll);
   }
 
   Future<void> _onSubscription(
@@ -70,14 +73,37 @@ class LocationSettingsBloc
     );
   }
 
-  void _onEditingButtonTap(
-    LocationSettingsEventEditingButtonTap event,
+  Future<void> _onEditing(
+    LocationSettingsEventEditing event,
     Emitter<LocationSettingsState> emit,
-  ) {
+  ) async {
+    if (event.editing) {
+      emit(state.copyWith(
+        status: () => LocationSettingsStatus.editing,
+      ));
+      return;
+    }
+    final trackList = await _weatherRepository.trackingLocations.first;
+    final weatherList = await _weatherRepository.currentWeatherList.first;
+    final List<TrackingLocation> newTrackList = [];
+    final List<CurrentWeatherData> newWeatherList = [];
+    for (var index = 0; index < state.locationsList.length; index++) {
+      final id = state.locationsList[index].id;
+      final track = trackList.firstWhere((element) => element.id == id);
+      newTrackList.add(track);
+      final weather = weatherList.firstWhere((element) => element.id == id);
+      newWeatherList.add(weather);
+    }
+    try {
+      _weatherRepository.saveAllCurrentWeatherList(newWeatherList);
+      _weatherRepository.saveTrackingLocationsList(newTrackList);
+    } catch (e) {
+      emit(state.copyWith(
+          status: () => LocationSettingsStatus.error,
+          errorTitle: () => 'что-то пошло не так'));
+    }
     emit(state.copyWith(
-      status: () => state.status == LocationSettingsStatus.success
-          ? LocationSettingsStatus.editing
-          : LocationSettingsStatus.success,
+      status: () => LocationSettingsStatus.success,
     ));
   }
 
@@ -103,8 +129,51 @@ class LocationSettingsBloc
     Emitter<LocationSettingsState> emit,
   ) {
     final locations = [...state.locationsList];
-    locations[event.index].check = !locations[event.index].check;
-    emit(state.copyWith(locationsList: () => locations));
+    bool check = !locations[event.index].check;
+    locations[event.index] = locations[event.index].copyWith(check: check);
+    emit(state.copyWith(
+      locationsList: () => locations,
+      checkedItemsCount: () =>
+          check ? state.checkedItemsCount + 1 : state.checkedItemsCount - 1,
+    ));
+  }
+
+  Future<void> _onDeleteButtonTap(
+    LocationSettingsEventDeleteButtonTap event,
+    Emitter<LocationSettingsState> emit,
+  ) async {
+    final trackList = await _weatherRepository.trackingLocations.first;
+    final weatherList = await _weatherRepository.currentWeatherList.first;
+    final locations = [...state.locationsList];
+    for (var index = 0; index < locations.length; index++) {
+      final item = state.locationsList[index];
+      if (item.check) {
+        trackList.removeWhere((element) => element.id == item.id);
+        weatherList.removeWhere((element) => element.id == item.id);
+        locations.removeAt(index);
+      }
+    }
+    _weatherRepository.saveTrackingLocationsList(trackList);
+    _weatherRepository.saveAllCurrentWeatherList(weatherList);
+    emit(state.copyWith(
+      checkedItemsCount: () => 0,
+      status: () => LocationSettingsStatus.success,
+      locationsList: () => locations,
+    ));
+  }
+
+  void _onCheckAll(
+    LocationSettingsEventCheckAll event,
+    Emitter<LocationSettingsState> emit,
+  ) {
+    final isAllMarked = state.locationsList.length == state.checkedItemsCount;
+    final locations = state.locationsList
+        .map((element) => element.copyWith(check: isAllMarked ? false : true))
+        .toList();
+    emit(state.copyWith(
+      checkedItemsCount: () => isAllMarked ? 0 : locations.length,
+      locationsList: () => locations,
+    ));
   }
 
   List<Location> _lcoationListParser({
@@ -114,13 +183,19 @@ class LocationSettingsBloc
     final List<Location> list = [];
     for (var index = 0; index < weatherlistRaw.length; index++) {
       final item = weatherlistRaw[index];
+      final map = WeatherParser().getMinMaxDayTemperatureInt(
+        hourList: item.forecast.forecastday[0].hour,
+      );
+      final maxTempTitle = map['max_temp'].toString();
+      final minTempTitle = map['min_temp'].toString();
+
       list.add(Location(
         id: item.id,
         locationTitle: locationlistRaw[index].title,
         regionTitle: item.location.country,
-        currentTempTitle: item.current.tempC.toString(),
-        maxTempTitle: '0',
-        minTempTitle: '0',
+        currentTempTitle: '${item.current.tempC.round()}°',
+        maxTempTitle: '$maxTempTitle°',
+        minTempTitle: '$minTempTitle°/',
         iconPath: item.current.condition.icon
             .replaceFirst('//cdn.weatherapi.com/', 'lib/domain/resources/'),
       ));

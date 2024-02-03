@@ -11,13 +11,21 @@ final class LocationSettingsEventSubscription extends LocationSettingsEvent {
   const LocationSettingsEventSubscription();
 }
 
-final class LocationSettingsEventEditingButtonTap
-    extends LocationSettingsEvent {
-  const LocationSettingsEventEditingButtonTap();
+final class LocationSettingsEventEditing extends LocationSettingsEvent {
+  final bool editing;
+  const LocationSettingsEventEditing({required this.editing});
+}
+
+final class LocationSettingsEventCheckAll extends LocationSettingsEvent {
+  const LocationSettingsEventCheckAll();
 }
 
 final class LocationSettingsEventSearchButtonTap extends LocationSettingsEvent {
   const LocationSettingsEventSearchButtonTap();
+}
+
+final class LocationSettingsEventDeleteButtonTap extends LocationSettingsEvent {
+  const LocationSettingsEventDeleteButtonTap();
 }
 
 final class LocationSettingsEventToggleCheck extends LocationSettingsEvent {

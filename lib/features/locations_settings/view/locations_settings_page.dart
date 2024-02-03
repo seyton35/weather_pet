@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:weather_pet/features/locations_settings/location_settings.dart';
@@ -18,31 +20,111 @@ class LocationSettingsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Управление городами'),
-      ),
-      body: BlocBuilder<LocationSettingsBloc, LocationSettingsState>(
-        buildWhen: (previous, current) => previous.status != current.status,
-        builder: (context, state) {
-          switch (state.status) {
-            case LocationSettingsStatus.initial:
-              return const SizedBox.shrink();
-            case LocationSettingsStatus.editing:
-            case LocationSettingsStatus.success:
-              return const _BodyWidget();
-            case LocationSettingsStatus.error:
-            default:
-              return Center(child: Text(state.errorTitle));
+    return BlocBuilder<LocationSettingsBloc, LocationSettingsState>(
+      buildWhen: (previous, current) =>
+          current.status != previous.status ||
+          current.checkedItemsCount == current.locationsList.length &&
+              previous.checkedItemsCount != current.locationsList.length ||
+          previous.checkedItemsCount == current.locationsList.length &&
+              current.checkedItemsCount != current.locationsList.length,
+      builder: (context, state) {
+        final appBar = AppBar(
+          backgroundColor: Colors.transparent,
+          foregroundColor: Colors.grey[800],
+          elevation: 0,
+          centerTitle: true,
+          title: const _AppBarTitleWidget(),
+          leading: state.status != LocationSettingsStatus.editing
+              ? null
+              : IconButton(
+                  onPressed: () => context.read<LocationSettingsBloc>().add(
+                        const LocationSettingsEventEditing(editing: false),
+                      ),
+                  icon: const Icon(Icons.close)),
+          actions: state.status != LocationSettingsStatus.editing
+              ? null
+              : [
+                  IconButton(
+                    onPressed: () => context
+                        .read<LocationSettingsBloc>()
+                        .add(const LocationSettingsEventCheckAll()),
+                    icon: Icon(
+                      Icons.checklist_rounded,
+                      color:
+                          state.checkedItemsCount == state.locationsList.length
+                              ? Colors.blue
+                              : null,
+                    ),
+                  ),
+                ],
+        );
+        return Scaffold(
+          appBar: appBar,
+          body: BlocBuilder<LocationSettingsBloc, LocationSettingsState>(
+            buildWhen: (previous, current) => previous.status != current.status,
+            builder: (context, state) {
+              switch (state.status) {
+                case LocationSettingsStatus.initial:
+                  return const SizedBox.shrink();
+                case LocationSettingsStatus.editing:
+                case LocationSettingsStatus.success:
+                  return const _BodyWidget();
+                case LocationSettingsStatus.error:
+                default:
+                  return Center(child: Text(state.errorTitle));
+              }
+            },
+          ),
+          floatingActionButton: const _FloatingActionButtonsWidget(),
+        );
+      },
+    );
+  }
+}
+
+class _AppBarTitleWidget extends StatelessWidget {
+  const _AppBarTitleWidget();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<LocationSettingsBloc, LocationSettingsState>(
+      buildWhen: (previous, current) =>
+          current.status != previous.status ||
+          current.checkedItemsCount != previous.checkedItemsCount,
+      builder: (context, state) {
+        if (state.status == LocationSettingsStatus.editing) {
+          if (state.checkedItemsCount > 0) {
+            return Text('Выбрано ${state.checkedItemsCount}');
           }
-        },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => context
-            .read<LocationSettingsBloc>()
-            .add(const LocationSettingsEventEditingButtonTap()),
-        child: const Icon(Icons.edit),
-      ),
+          return const Text('Выберите объекты');
+        }
+        return const Text('Управление городами');
+      },
+    );
+  }
+}
+
+class _FloatingActionButtonsWidget extends StatelessWidget {
+  const _FloatingActionButtonsWidget();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<LocationSettingsBloc, LocationSettingsState>(
+      buildWhen: (previous, current) => previous.status != current.status,
+      builder: (context, state) =>
+          state.status == LocationSettingsStatus.success
+              ? FloatingActionButton(
+                  onPressed: () => context
+                      .read<LocationSettingsBloc>()
+                      .add(const LocationSettingsEventEditing(editing: true)),
+                  child: const Icon(Icons.edit),
+                )
+              : FloatingActionButton(
+                  onPressed: () => context
+                      .read<LocationSettingsBloc>()
+                      .add(const LocationSettingsEventDeleteButtonTap()),
+                  child: const Icon(Icons.delete),
+                ),
     );
   }
 }
@@ -59,9 +141,12 @@ class _BodyWidget extends StatelessWidget {
           const SizedBox(height: 10),
           const _SearchLocationWidget(),
           const SizedBox(height: 10),
-          state.status == LocationSettingsStatus.success
-              ? const _LocationsListView()
-              : const _EditingLocationsListView(),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            child: state.status == LocationSettingsStatus.success
+                ? const _LocationsListView()
+                : const _EditingLocationsListView(),
+          ),
         ],
       ),
     );
@@ -105,17 +190,38 @@ class _SearchLocationWidget extends StatelessWidget {
 class _EditingLocationsListView extends StatelessWidget {
   const _EditingLocationsListView();
 
+  Widget proxyDecorator(Widget child, int index, Animation<double> animation) {
+    return AnimatedBuilder(
+      animation: animation,
+      builder: (BuildContext context, Widget? child) {
+        final double animValue = Curves.easeInOut.transform(animation.value);
+        final double elevation = lerpDouble(1, 6, animValue)!;
+        final double scale = lerpDouble(1, 1.07, animValue)!;
+        return Transform.scale(
+          scale: scale,
+          child: Card(
+            elevation: elevation,
+            child: child,
+          ),
+        );
+      },
+      child: child,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<LocationSettingsBloc, LocationSettingsState>(
+      buildWhen: (previous, current) =>
+          previous.locationsList != current.locationsList,
       builder: (context, state) {
         final locations = state.locationsList;
         return SizedBox(
-          height: 500,
+          //todo escape fixed height
+          height: 543,
           child: ReorderableListView.builder(
+            proxyDecorator: proxyDecorator,
             itemCount: locations.length,
-            // padding: const EdgeInsets.symmetric(horizontal: 10),
-            header: Container(),
             itemBuilder: (context, index) => _ListItem(
               key: ValueKey(locations[index].id),
               index: index,
@@ -138,14 +244,17 @@ class _EditingLocationsListView extends StatelessWidget {
 }
 
 class _LocationsListView extends StatelessWidget {
-  const _LocationsListView({super.key});
+  const _LocationsListView();
 
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<LocationSettingsBloc, LocationSettingsState>(
+      buildWhen: (previous, current) =>
+          previous.locationsList != current.locationsList,
       builder: (context, state) {
         return SizedBox(
-          height: 500,
+          //todo escape fixed height
+          height: 543,
           child: ListView.builder(
             itemCount: state.locationsList.length,
             itemBuilder: (context, index) {
@@ -178,6 +287,28 @@ class _ListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final List<Widget> list = [];
+    if (editing) {
+      list.add(ReorderableDragStartListener(
+        key: ValueKey<int>(index),
+        index: index,
+        child: const Icon(Icons.menu),
+      ));
+    }
+    list.add(_LocationCard(location: location));
+    if (editing) {
+      list.add(IconButton(
+        onPressed: () => context
+            .read<LocationSettingsBloc>()
+            .add(LocationSettingsEventToggleCheck(index: index)),
+        icon: Icon(
+          location.check
+              ? Icons.check_box_outlined
+              : Icons.check_box_outline_blank,
+          color: Colors.white,
+        ),
+      ));
+    }
     return Padding(
       padding: const EdgeInsets.all(4.0),
       child: DecoratedBox(
@@ -193,19 +324,27 @@ class _ListItem extends StatelessWidget {
               ? ReorderableDragStartListener(
                   key: ValueKey<int>(index),
                   index: index,
-                  child: const Icon(Icons.menu),
+                  child: const Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.menu),
+                    ],
+                  ),
                 )
               : null,
           trailing: editing
-              ? IconButton(
-                  onPressed: () => context
-                      .read<LocationSettingsBloc>()
-                      .add(LocationSettingsEventToggleCheck(index: index)),
-                  icon: Icon(
-                    location.check
-                        ? Icons.check_box_outlined
-                        : Icons.check_box_outline_blank,
-                    color: Colors.white,
+              ? SizedBox(
+                  width: 30,
+                  child: IconButton(
+                    onPressed: () => context
+                        .read<LocationSettingsBloc>()
+                        .add(LocationSettingsEventToggleCheck(index: index)),
+                    icon: Icon(
+                      location.check
+                          ? Icons.check_box_outlined
+                          : Icons.check_box_outline_blank,
+                      color: Colors.white,
+                    ),
                   ),
                 )
               : null,
@@ -224,33 +363,45 @@ class _LocationCard extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
+        Flexible(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                location.locationTitle,
+                overflow: TextOverflow.ellipsis,
+                style:
+                    const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                location.regionTitle,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(width: 10),
+              Row(
+                children: [
+                  Image.asset(
+                    location.iconPath,
+                    width: 50,
+                  ),
+                  const SizedBox(width: 10),
+                  Text(location.minTempTitle + location.maxTempTitle),
+                ],
+              ),
+            ],
+          ),
+        ),
         Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              location.locationTitle,
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(width: 10),
-            Text(location.regionTitle),
-            const SizedBox(width: 10),
-            Row(
-              children: [
-                Image.asset(
-                  location.iconPath,
-                  width: 50,
-                ),
-                Text('${location.minTempTitle}°/${location.maxTempTitle}°'),
-              ],
-            ),
+              location.currentTempTitle,
+              style: const TextStyle(fontSize: 25, fontWeight: FontWeight.w700),
+            )
           ],
         ),
-        Column(children: [
-          Text(
-            '${location.currentTempTitle}°',
-            style: const TextStyle(fontSize: 25, fontWeight: FontWeight.w700),
-          )
-        ]),
       ],
     );
   }

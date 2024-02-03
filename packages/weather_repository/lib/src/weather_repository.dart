@@ -28,8 +28,8 @@ class WeatherRepository {
     final List<TrackingLocation> locations = await trackingLocations.first;
     final List<CurrentWeatherData> curWeatherList = [];
     for (var location in locations) {
-      final currentWeather =
-          await getCurrentWeather(location: location.title, days: 7);
+      final currentWeather = await getCurrentWeather(
+          location: "${location.lat},${location.lon}", days: 7);
 
       final currentWeatherData = CurrentWeatherData(
         id: location.id,
@@ -40,6 +40,14 @@ class WeatherRepository {
       curWeatherList.add(currentWeatherData);
     }
     _currentWeatherStreamController.add([...curWeatherList]);
+  }
+
+  void saveTrackingLocationsList(List<TrackingLocation> locations) {
+    _trackLocationDataProvider.saveAllLocation(locations);
+  }
+
+  void saveAllCurrentWeatherList(List<CurrentWeatherData> weatherList) {
+    _currentWeatherStreamController.add(weatherList);
   }
 
   Future<CurrentWeather> getCurrentWeather(

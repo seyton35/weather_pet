@@ -42,6 +42,11 @@ class TrackLocationDataProvider {
     }
   }
 
+  Future<void> saveAllLocation(List<TrackingLocation> locations) {
+    _trackingLocationStreamController.add(locations);
+    return _setValue(kTrackingLocationsCollectionKey, json.encode(locations));
+  }
+
   Future<void> saveLocation(TrackingLocation location) {
     final locations = [..._trackingLocationStreamController.value];
     final isLocationIndex = locations.indexWhere((l) => l.id == location.id);
