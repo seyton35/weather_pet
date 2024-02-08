@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:weather_pet/features/choose_location/choose_location.dart';
 import 'package:weather_pet/features/locations_settings/view/view.dart';
-import 'package:weather_pet/features/settings/settings.dart';
+// import 'package:weather_pet/features/settings/settings.dart';
 import 'package:weather_pet/features/weather_overview/weather_overview.dart';
 import 'package:weather_pet/features/weekly_weather/weekly_weather.dart';
 
@@ -27,7 +27,7 @@ class MainNavigation {
     //     ChooseLocation.create()
     MainNavigationRouteNames.locationSettings: (context) =>
         LocationSettingsPage.create(),
-    MainNavigationRouteNames.settings: (context) => SettingsPage.create(),
+    // MainNavigationRouteNames.settings: (context) => SettingsPage.create(),
   };
   Route<Object> onGeneratedRoute(RouteSettings settings) {
     switch (settings.name) {
