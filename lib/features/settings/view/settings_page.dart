@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:weather_pet/domain/models/settings.dart';
+import '../../../../packages/local_storage_settings_api/lib/src/models/settings.dart';
 import 'package:weather_pet/features/settings/settings.dart';
 
 class SettingsPage extends StatelessWidget {
@@ -57,6 +57,17 @@ class UnitsSettings extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    onTap(newUnit) {
+      context
+          .read<SettingsBloc>()
+          .add(SettingsEventChangeUnit(newUnit: newUnit));
+      Navigator.of(context).pop();
+    }
+
+    final temperatureTitles =
+        context.read<SettingsBloc>().state.temperatureTitles;
+    final preassureTitles = context.read<SettingsBloc>().state.preassureTitles;
+    final windSpeedTitles = context.read<SettingsBloc>().state.windSpeedTitles;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 10),
       child: Column(
@@ -65,7 +76,10 @@ class UnitsSettings extends StatelessWidget {
           InkWell(
             onTap: () => showDialog(
               context: context,
-              builder: (context) => const _DialogWidget(),
+              builder: (context) => _DialogWidget(
+                data: temperatureTitles,
+                onTap: onTap,
+              ),
             ),
             child: Row(
               children: [
@@ -83,7 +97,13 @@ class UnitsSettings extends StatelessWidget {
             ),
           ),
           InkWell(
-            onTap: () {},
+            onTap: () => showDialog(
+              context: context,
+              builder: (context) => _DialogWidget(
+                data: windSpeedTitles,
+                onTap: onTap,
+              ),
+            ),
             child: Row(
               children: [
                 const Text('Скорость ветра'),
@@ -100,7 +120,13 @@ class UnitsSettings extends StatelessWidget {
             ),
           ),
           InkWell(
-            onTap: () {},
+            onTap: () => showDialog(
+              context: context,
+              builder: (context) => _DialogWidget(
+                data: preassureTitles,
+                onTap: onTap,
+              ),
+            ),
             child: Row(
               children: [
                 const Text('Атмосферное давление'),
@@ -135,33 +161,25 @@ class _SwapIcon extends StatelessWidget {
 }
 
 class _DialogWidget extends StatelessWidget {
-  const _DialogWidget({super.key});
+  final Map<String, dynamic> data;
+  final Function onTap;
+  const _DialogWidget({
+    required this.data,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Dialog(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 10),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _DialogButtonItem(
-              onTap: () => context
-                  .read<SettingsBloc>()
-                  .add(const SettingsEventChangeTemperatureUnit(
-                    temperatureUnit: TemperatureUnits.celsius,
-                  )),
-              title: 'celsium',
-            ),
-            _DialogButtonItem(
-              onTap: () => context
-                  .read<SettingsBloc>()
-                  .add(const SettingsEventChangeTemperatureUnit(
-                    temperatureUnit: TemperatureUnits.fahrenheit,
-                  )),
-              title: 'fahrenheit',
-            ),
-          ],
+        child: ListView.builder(
+          shrinkWrap: true,
+          itemCount: data.length,
+          itemBuilder: (context, index) => _DialogButtonItem(
+            onTap: () => onTap(data.entries.elementAt(index).value),
+            title: data.entries.elementAt(index).key,
+          ),
         ),
       ),
     );
@@ -181,6 +199,7 @@ class _DialogButtonItem extends StatelessWidget {
     return InkWell(
       onTap: () => onTap(),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [Text(title), const Icon(Icons.arrow_right)],
       ),
     );

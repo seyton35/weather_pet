@@ -13,26 +13,10 @@ final class SettingsEventLoading extends SettingsEvent {
   const SettingsEventLoading();
 }
 
-final class SettingsEventChangeSpeedUnit extends SettingsEvent {
-  final WindSpeedUnits speedUnit;
+final class SettingsEventChangeUnit extends SettingsEvent {
+  final dynamic newUnit;
 
-  const SettingsEventChangeSpeedUnit({
-    required this.speedUnit,
-  });
-}
-
-final class SettingsEventChangeTemperatureUnit extends SettingsEvent {
-  final TemperatureUnits temperatureUnit;
-
-  const SettingsEventChangeTemperatureUnit({
-    required this.temperatureUnit,
-  });
-}
-
-final class SettingsEventChangePreassureUnit extends SettingsEvent {
-  final PreassureUnits preassureUnit;
-
-  const SettingsEventChangePreassureUnit({
-    required this.preassureUnit,
+  const SettingsEventChangeUnit({
+    required this.newUnit,
   });
 }

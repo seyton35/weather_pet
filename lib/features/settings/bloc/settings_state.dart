@@ -7,13 +7,19 @@ final class SettingsState extends Equatable {
   final String temperatureTitle;
   final String speedTitle;
   final String preassureTitle;
+  final Map<String, dynamic> temperatureTitles;
+  final Map<String, dynamic> preassureTitles;
+  final Map<String, dynamic> windSpeedTitles;
   final String errorTitle;
   const SettingsState({
     this.status = SettingsStatus.initial,
     this.errorTitle = '',
-    this.temperatureTitle = 'csgvsd',
-    this.speedTitle = 'csgvsd',
-    this.preassureTitle = 'csgvsd',
+    this.temperatureTitle = '',
+    this.speedTitle = '',
+    this.preassureTitle = '',
+    this.temperatureTitles = const {},
+    this.preassureTitles = const {},
+    this.windSpeedTitles = const {},
   });
 
   SettingsState copyWith({
@@ -22,6 +28,9 @@ final class SettingsState extends Equatable {
     String Function()? temperatureTitle,
     String Function()? speedTitle,
     String Function()? preassureTitle,
+    Map<String, dynamic> Function()? temperatureTitles,
+    Map<String, dynamic> Function()? preassureTitles,
+    Map<String, dynamic> Function()? windSpeedTitles,
   }) =>
       SettingsState(
         status: status != null ? status() : this.status,
@@ -32,6 +41,13 @@ final class SettingsState extends Equatable {
             : this.temperatureTitle,
         preassureTitle:
             preassureTitle != null ? preassureTitle() : this.preassureTitle,
+        temperatureTitles: temperatureTitles != null
+            ? temperatureTitles()
+            : this.temperatureTitles,
+        preassureTitles:
+            preassureTitles != null ? preassureTitles() : this.preassureTitles,
+        windSpeedTitles:
+            windSpeedTitles != null ? windSpeedTitles() : this.windSpeedTitles,
       );
 
   @override
@@ -41,5 +57,8 @@ final class SettingsState extends Equatable {
         temperatureTitle,
         speedTitle,
         preassureTitle,
+        temperatureTitles,
+        preassureTitles,
+        windSpeedTitles,
       ];
 }
