@@ -16,17 +16,11 @@ class ApplicationSettingsDataProvider {
   void _init() {
     final settingsJson = _plugin.getString(kApplicationSettingsCollectionKey);
     if (settingsJson != null) {
-      //   final settingsListJson = json.decode(settingsJson) as Settings;
-      //   final trackLocations = settingsListJson
-      //       .map(
-      //         (locationJson) => TrackingLocation.fromJson(
-      //           jsonDecode(locationJson),
-      //         ),
-      //       )
-      //       .toList();
-      //   _trackingLocationStreamController.add([...trackLocations]);
-      // } else {
-      //   _trackingLocationStreamController.add(const []);
+      final settings = Settings.fromJson(json.decode(settingsJson));
+      print(settings);
+      // _trackingLocationStreamController.add([...trackLocations]);
+    } else {
+      // _trackingLocationStreamController.add(const []);
     }
   }
 }

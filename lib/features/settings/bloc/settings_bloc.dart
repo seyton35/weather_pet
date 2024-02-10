@@ -1,6 +1,6 @@
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
-import '../../../../packages/local_storage_settings_api/lib/src/models/settings.dart';
+import 'package:local_storage_settings_api/local_storage_settings_api.dart';
 
 part 'settings_event.dart';
 part 'settings_state.dart';

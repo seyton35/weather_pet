@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:local_storage_settings_api/local_storage_settings_api.dart';
 import 'package:local_storage_tracking_locations_api/local_storage_tracking_locations_api.dart';
 import 'package:weather_pet/domain/observer/weather_observer.dart';
 import 'package:weather_repository/weather_repository.dart';
@@ -16,6 +17,8 @@ void main() async {
     trackLocationApi: trackLocationsApi,
     weatherApiClient: weatherApiClient,
   );
+  final settingsApi = ApplicationSettingsDataProvider(
+      plugin: await SharedPreferences.getInstance());
   final trackingLocations = await weatherRepository.trackingLocations.first;
   final app = RepositoryProvider.value(
     value: weatherRepository,

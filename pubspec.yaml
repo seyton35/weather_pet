@@ -21,6 +21,8 @@ dependencies:
   rxdart: ^0.27.7
   local_storage_tracking_locations_api:
     path: "packages/local_storage_tracking_locations_api"
+  local_storage_settings_api:
+    path: "packages/local_storage_settings_api"
   weather_repository:
     path: "packages/weather_repository"
 

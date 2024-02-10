@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../../packages/local_storage_settings_api/lib/src/models/settings.dart';
 import 'package:weather_pet/features/settings/settings.dart';
 
 class SettingsPage extends StatelessWidget {
