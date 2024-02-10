@@ -1,6 +1,5 @@
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
-import 'package:intl/intl.dart';
 
 import 'package:weather_pet/features/weekly_weather/weekly_weather.dart';
 import 'package:weather_pet/domain/parsers/date_parser.dart';
@@ -15,7 +14,6 @@ class WeeklyWeatherBloc extends Bloc<WeeklyWeatherEvent, WeeklyWeatherState> {
   final String locationId;
   final String? lat;
   final String? lon;
-  final _dateFormat = DateFormat();
   final _dateParser = DateParser();
 
   WeeklyWeatherBloc({
