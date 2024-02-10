@@ -7,7 +7,7 @@ class _DayOfWeekDict {
   });
 }
 
-List<_DayOfWeekDict> dict = [
+List<_DayOfWeekDict> _dict = [
   _DayOfWeekDict(fullWord: 'понедельник', shortWord: 'пн.'),
   _DayOfWeekDict(fullWord: 'вторник', shortWord: 'вт.'),
   _DayOfWeekDict(fullWord: 'среда', shortWord: 'ср.'),
@@ -18,16 +18,30 @@ List<_DayOfWeekDict> dict = [
 ];
 
 class DateParser {
-  String dayOfWeekRu(
-      {required DateTime date, short = false, upperCaseFirst = false}) {
+  String dayOfWeekRu({
+    required DateTime date,
+    short = false,
+    upperCaseFirst = false,
+  }) {
     String res;
     final index = date.weekday - 1;
-    res = short ? dict[index].shortWord : dict[index].fullWord;
+    res = short ? _dict[index].shortWord : _dict[index].fullWord;
     if (upperCaseFirst) {
       var letter = res[0].toUpperCase();
       res = res.replaceRange(0, 1, letter);
     }
 
     return res;
+  }
+
+  String dayAndMonthNumeric({
+    required DateTime date,
+  }) {
+    String day = date.day.toString();
+    String month = date.month.toString();
+    if (month.length == 1) month = '0$month';
+    if (day.length == 1) day = '0$day';
+
+    return '$day.$month';
   }
 }

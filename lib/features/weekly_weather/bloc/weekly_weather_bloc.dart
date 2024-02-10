@@ -1,6 +1,7 @@
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:intl/intl.dart';
+
 import 'package:weather_pet/features/weekly_weather/weekly_weather.dart';
 import 'package:weather_pet/domain/parsers/date_parser.dart';
 import 'package:weather_pet/domain/parsers/wind_dirrection.dart';
@@ -84,7 +85,7 @@ class WeeklyWeatherBloc extends Bloc<WeeklyWeatherEvent, WeeklyWeatherState> {
         date: forecastday.date,
         upperCaseFirst: true,
       );
-      final date = _dateFormat.format(forecastday.date);
+      final date = _dateParser.dayAndMonthNumeric(date: forecastday.date);
       final maxnTemp = dayRaw.maxtempC.round().toString();
       final minTemp = dayRaw.mintempC.round().toString();
 
