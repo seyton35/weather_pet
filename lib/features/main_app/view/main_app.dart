@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:weather_pet/domain/navigation/main_navigartion.dart';
+import 'package:weather_pet/domain/theme/theme.dart';
 
 class MainApp extends StatefulWidget {
   static final mainNavigation = MainNavigation();
@@ -18,6 +19,7 @@ class _MainAppState extends State<MainApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Weather',
+      theme: lightTheme,
       initialRoute: MainApp.mainNavigation
           .initialRoute(hasLocationsToShow: widget.hasLocationsToShow),
       routes: MainApp.mainNavigation.routes,

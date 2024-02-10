@@ -96,7 +96,6 @@ class _DayWeatherWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const textStyle = TextStyle(fontSize: 14);
     // todo: calculate width correctly
     final width = MediaQuery.of(context).size.width / 4;
     final decoration = index != 0
@@ -113,7 +112,7 @@ class _DayWeatherWidget extends StatelessWidget {
         child: Column(
           children: [
             const SizedBox(height: 30),
-            Text(weekTitle, style: const TextStyle(fontSize: 14)),
+            Text(weekTitle, style: Theme.of(context).textTheme.titleSmall),
             const SizedBox(height: 10),
             Text(daylyWeather.date),
             const SizedBox(height: 20),
@@ -123,11 +122,9 @@ class _DayWeatherWidget extends StatelessWidget {
               height: 50,
             ),
             const SizedBox(height: 10),
-            Text('${daylyWeather.maxTempTitle}°',
-                style: const TextStyle(fontSize: 18)),
+            Text('${daylyWeather.maxTempTitle}°'),
             const Spacer(),
-            Text('${daylyWeather.minTempTitle}°',
-                style: const TextStyle(fontSize: 18)),
+            Text('${daylyWeather.minTempTitle}°'),
             const SizedBox(height: 10),
             Image.asset(
               (daylyWeather.nightIconPath),
@@ -143,7 +140,10 @@ class _DayWeatherWidget extends StatelessWidget {
                     Icons.navigation,
                   ),
                 ),
-                Text('${daylyWeather.windSpeedTitle} км/ч', style: textStyle),
+                Text(
+                  '${daylyWeather.windSpeedTitle} км/ч',
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
               ],
             ),
             const SizedBox(height: 10),

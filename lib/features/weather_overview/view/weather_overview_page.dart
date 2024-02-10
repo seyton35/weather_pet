@@ -163,12 +163,11 @@ class _CurrentWeather extends StatelessWidget {
         children: [
           Text(
             '${weather.tempTitle}°',
-            style: const TextStyle(fontSize: 90),
+            style: Theme.of(context).textTheme.bodyLarge,
           ),
           Image.asset(weather.iconPath),
           Text(
             '${weather.maxTempTitle}°/${weather.minTempTitle}°',
-            style: const TextStyle(fontSize: 18),
           ),
         ],
       ),
@@ -231,13 +230,13 @@ class _HourlyWeather extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(Icons.access_time),
-              SizedBox(width: 5),
+              const Icon(Icons.access_time),
+              const SizedBox(width: 5),
               Text(
                 'прогноз на 24 ч',
-                style: TextStyle(fontSize: 18),
+                style: Theme.of(context).textTheme.bodyMedium,
               ),
             ],
           ),
@@ -262,7 +261,6 @@ class _HourWeatherWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const textStyle = TextStyle(fontSize: 16);
     // todo: calculate width correctly
     final width = MediaQuery.of(context).size.width / 4.5;
     return SizedBox(
@@ -272,10 +270,12 @@ class _HourWeatherWidget extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           const SizedBox(height: 10),
-          Text('${hourWeather.tempTitle}°',
-              style: const TextStyle(fontSize: 18)),
+          Text('${hourWeather.tempTitle}°'),
           Image.asset(hourWeather.iconPath),
-          Text('${hourWeather.windSpeedTitle} км/ч', style: textStyle),
+          Text(
+            '${hourWeather.windSpeedTitle} км/ч',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
           Text(hourWeather.time),
           const SizedBox(height: 10),
         ],
