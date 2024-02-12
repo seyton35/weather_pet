@@ -34,27 +34,20 @@ class LocationSettingsBloc
     Emitter<LocationSettingsState> emit,
   ) async {
     try {
-      final currentWeatherList =
-          await _weatherRepository.currentWeatherList.first;
-      final trackingLocations =
-          await _weatherRepository.trackingLocations.first;
-      emit(state.copyWith(
-        status: () => LocationSettingsStatus.success,
-        locationsList: () => _lcoationListParser(
-          weatherlistRaw: currentWeatherList,
-          locationlistRaw: trackingLocations,
-        ),
-      ));
-      // await emit.forEach<List<CurrentWeatherData>>(
-      //   _weatherRepository.currentWeatherList,
-      //   onData: (data) => state.copyWith(
-      //     status: () => LocationSettingsStatus.success,
-      //     locationsList: () => _lcoationListParser(
-      //       weatherlistRaw: currentWeatherList,
-      //       locationlistRaw: trackingLocations,
-      //     ),
-      //   ),
-      // );
+      await emit.forEach<List<dynamic>>(
+        _weatherRepository.weatherDataList,
+        onData: (data) {
+          final trackingLocations = data[0] as List<TrackingLocation>;
+          final currentWeatherList = data[1] as List<CurrentWeatherData>;
+          return state.copyWith(
+            status: () => LocationSettingsStatus.success,
+            locationsList: () => _lcoationListParser(
+              weatherlistRaw: currentWeatherList,
+              locationlistRaw: trackingLocations,
+            ),
+          );
+        },
+      );
     } catch (e) {
       emit(state.copyWith(
         status: () => LocationSettingsStatus.error,
@@ -145,21 +138,28 @@ class LocationSettingsBloc
     final trackList = await _weatherRepository.trackingLocations.first;
     final weatherList = await _weatherRepository.currentWeatherList.first;
     final locations = [...state.locationsList];
-    for (var index = 0; index < locations.length; index++) {
-      final item = state.locationsList[index];
-      if (item.check) {
-        trackList.removeWhere((element) => element.id == item.id);
-        weatherList.removeWhere((element) => element.id == item.id);
-        locations.removeAt(index);
+    if (locations.length == state.checkedItemsCount) {
+      _weatherRepository.saveTrackingLocationsList([]);
+      _weatherRepository.saveAllCurrentWeatherList([]);
+      Navigator.of(_context).pushNamedAndRemoveUntil(
+          MainNavigationRouteNames.chooseLocation, (route) => false);
+    } else {
+      for (var index = 0; index < locations.length; index++) {
+        final item = state.locationsList[index];
+        if (item.check) {
+          trackList.removeWhere((element) => element.id == item.id);
+          weatherList.removeWhere((element) => element.id == item.id);
+          locations.removeAt(index);
+        }
       }
+      _weatherRepository.saveTrackingLocationsList(trackList);
+      _weatherRepository.saveAllCurrentWeatherList(weatherList);
+      emit(state.copyWith(
+        checkedItemsCount: () => 0,
+        status: () => LocationSettingsStatus.success,
+        locationsList: () => locations,
+      ));
     }
-    _weatherRepository.saveTrackingLocationsList(trackList);
-    _weatherRepository.saveAllCurrentWeatherList(weatherList);
-    emit(state.copyWith(
-      checkedItemsCount: () => 0,
-      status: () => LocationSettingsStatus.success,
-      locationsList: () => locations,
-    ));
   }
 
   void _onCheckAll(

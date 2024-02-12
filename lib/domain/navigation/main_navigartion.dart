@@ -7,7 +7,6 @@ import 'package:weather_pet/features/weather_overview/weather_overview.dart';
 import 'package:weather_pet/features/weekly_weather/weekly_weather.dart';
 
 abstract class MainNavigationRouteNames {
-  // static const loader = '/loader';
   static const weatherOverview = '/weather_overview';
   static const weeklyWeather = '/weekly_weather';
   static const locationSettings = '/location_settings';
@@ -28,6 +27,10 @@ class MainNavigation {
     MainNavigationRouteNames.locationSettings: (context) =>
         LocationSettingsPage.create(),
     // MainNavigationRouteNames.settings: (context) => SettingsPage.create(),
+    MainNavigationRouteNames.settings: (context) => Scaffold(
+          appBar: AppBar(),
+          body: Center(child: Text('В разработке')),
+        )
   };
   Route<Object> onGeneratedRoute(RouteSettings settings) {
     switch (settings.name) {

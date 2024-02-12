@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:local_storage_tracking_locations_api/local_storage_tracking_locations_api.dart';
+import 'package:rxdart/rxdart.dart';
 import 'package:rxdart/subjects.dart';
 import 'package:weather_api/weather_api.dart';
 import 'package:weather_repository/weather_repository.dart';
@@ -23,6 +24,12 @@ class WeatherRepository {
 
   Stream<List<CurrentWeatherData>> get currentWeatherList =>
       _currentWeatherStreamController.asBroadcastStream();
+
+  Stream<List<dynamic>> get weatherDataList => Rx.zip2(
+        trackingLocations,
+        currentWeatherList,
+        (a, b) => [a, b],
+      );
 
   getCurrentWeatherList() async {
     final List<TrackingLocation> locations = await trackingLocations.first;

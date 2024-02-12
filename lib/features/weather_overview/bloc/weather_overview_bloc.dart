@@ -1,6 +1,7 @@
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
+import 'package:local_storage_tracking_locations_api/local_storage_tracking_locations_api.dart';
 import 'package:weather_pet/domain/navigation/main_navigartion.dart';
 import 'package:weather_pet/features/weather_overview/models/models.dart';
 import 'package:weather_pet/domain/parsers/weather.dart';
@@ -32,21 +33,20 @@ class WeatherOverviewBloc
     Emitter<WeatherOverviewState> emit,
   ) async {
     try {
-      await _weatherRepository.getCurrentWeatherList();
-      final trackLocationsList =
-          await _weatherRepository.trackingLocations.first;
-      final locationTitle = trackLocationsList[0].title;
       emit(state.copyWith(
         status: () => WeatherOverviewStatus.loading,
-        locationTitle: () => locationTitle,
       ));
-      await emit.forEach<List<CurrentWeatherData>>(
-        _weatherRepository.currentWeatherList,
+      await _weatherRepository.getCurrentWeatherList();
+
+      await emit.forEach<List<dynamic>>(
+        _weatherRepository.weatherDataList,
         onData: (data) {
+          final trackingLocationsList = data[0] as List<TrackingLocation>;
+          final currentWeatherList = data[1] as List<CurrentWeatherData>;
           return state.copyWith(
             status: () => WeatherOverviewStatus.success,
-            weatherList: () => _listWeatherParser(data),
-            locationTitle: () => data[carouselIndex].location.name,
+            weatherList: () => _listWeatherParser(currentWeatherList),
+            locationTitle: () => trackingLocationsList[carouselIndex].title,
           );
         },
       );
